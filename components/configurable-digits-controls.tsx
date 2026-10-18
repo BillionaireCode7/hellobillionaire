@@ -141,13 +141,42 @@ export function ConfigurableBuyButton({
   isBuying,
 }: ConfigurableBuyButtonProps) {
   const { localize } = useAppTranslations();
+  const [countdown, setCountdown] = useState<number | null>(null);
 
-  const disabled = !isConnected || !proposal || isBuying;
+  useEffect(() => {
+    if (countdown === null || countdown <= 0) return;
+
+    const timer = window.setTimeout(() => {
+      setCountdown((current) =>
+        current === null ? null : Math.max(0, current - 1)
+      );
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [countdown]);
+
+  const handleClick = () => {
+    if (countdown === null) {
+      setCountdown(10);
+    } else if (countdown === 0) {
+      setCountdown(null);
+      onBuy();
+    }
+  };
+  const disabled =
+  !isConnected ||
+  !proposal ||
+  isBuying ||
+  (countdown !== null && countdown > 0);
   const label = isBuying
     ? localize('Purchasing...')
-    : proposal
-      ? localize('Buy @ {{price}} USD', { price: proposal.askPrice.toFixed(2) })
-      : localize('Buy Contract');
+    : countdown === null
+      ? localize('Start 10-Second Countdown')
+      : countdown > 0
+        ? `Wait ${countdown} seconds...`
+        : localize('Confirm & Buy');  
+    
+  
 
   const variants: Record<StyleVariant, () => React.ReactNode> = {
     // a — pill (current)
@@ -155,7 +184,7 @@ export function ConfigurableBuyButton({
       <Button
         className="h-10 w-full rounded-full px-6 sm:h-11 sm:px-8"
         disabled={disabled}
-        onClick={onBuy}
+        onClick={handleClick}
       >
         {label}
       </Button>
@@ -165,7 +194,7 @@ export function ConfigurableBuyButton({
       <Button
         className="h-14 w-full rounded-md bg-primary text-base font-bold text-primary-foreground hover:bg-primary/90"
         disabled={disabled}
-        onClick={onBuy}
+        onClick={handleClick}
       >
         {label}
       </Button>
@@ -175,7 +204,7 @@ export function ConfigurableBuyButton({
       <Button
         className="h-14 w-full rounded-xl bg-gradient-to-r from-primary to-primary/70 font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90"
         disabled={disabled}
-        onClick={onBuy}
+        onClick={handleClick}
       >
         {label}
       </Button>
