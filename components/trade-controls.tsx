@@ -109,7 +109,8 @@ export function TradeControls({
   onClearBuyResult,
   isAuthenticated,
   isMobile,
-}: TradeControlsProps) {
+}: TradeControlsProps) {            
+  const { localize } = useAppTranslations();
     const [countdown, setCountdown] = useState<number | null>(null);
 
   useEffect(() => {
