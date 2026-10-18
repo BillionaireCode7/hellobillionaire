@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Localize } from '@deriv-com/translations';
@@ -110,7 +110,19 @@ export function TradeControls({
   isAuthenticated,
   isMobile,
 }: TradeControlsProps) {
-  const { localize } = useAppTranslations();
+    const [countdown, setCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (countdown === null || countdown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setCountdown((current) =>
+        current === null ? null : Math.max(0, current - 1)
+      );
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   useEffect(() => {
     if (buyError) {
@@ -240,16 +252,28 @@ export function TradeControls({
       >
         <Button
           className="w-full h-10 rounded-full px-6 sm:h-11 sm:px-8"
-          disabled={!isConnected || !proposal || isBuying}
-          onClick={onBuy}
+          disabled={!isConnected || !proposal || isBuying || (countdown !== null && countdown > 0)}
+          onClick={() => {
+  if (countdown === null) {
+    setCountdown(10);
+  } else if (countdown === 0) {
+    setCountdown(null);
+    onBuy();
+  }
+}}
         >
-          {isBuying
-            ? localize('Purchasing...')
-            : proposal
-              ? localize('Buy @ {{price}} USD', {
-                  price: proposal.askPrice.toFixed(2),
-                })
-              : localize('Buy Contract')}
+   {isBuying
+  ? localize('Purchasing...')
+  : countdown === null
+    ? 'Start 10-Second Countdown'
+    : countdown > 0
+      ? `Wait ${countdown} seconds...`
+      : 'Confirm & Buy'}       
+        
+            
+          
+              
+          
         </Button>
       </div>
 
